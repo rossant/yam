@@ -182,9 +182,12 @@ class RemoteController(object):
         if info:
             return info['Playback_Info'] == 'Play'
 
-    def select(self, idx=1):
+    def select(self, idx=None):
+        if idx is None:
+            idx = self.item()
         idx = int(idx)
         self.put('SERVER/List_Control/Jump_Line', 'Line_{}'.format(idx))
+        self.put('SERVER/List_Control/Direct_Sel', 'Line_{}'.format(idx))
 
     def jump(self, idx=1):
         self.put('SERVER/List_Control/Jump_Line', 'Line_{}'.format(idx))
@@ -211,7 +214,7 @@ class RemoteController(object):
         k = 8
         items = self.get('SERVER/List_Info')
         items = [_get_item(items, 'Current_List/Line_{}/Txt'.format(i))
-                 for i in range(k)]
+                 for i in range(1, k + 1)]
         return [item for item in items if item]
 
     def iter_pages(self):
@@ -291,8 +294,8 @@ def _show_list(list, current=None):
     start_color = '\033[92m'
     end_color = '\033[0m'
     for i, item in enumerate(list):
-        line = '{}. {}'.format(i, item)
-        if i == current:
+        line = '{}. {}'.format(i + 1, item)
+        if (i + 1) == current:
             line = '{}{}{}'.format(start_color, line, end_color)
         print(line)
 
@@ -378,7 +381,8 @@ def main():
         if out:
             print(str(out).strip())
         c.wait_menu()
-        if cmd in ('previous', 'next', 'list'):
+        if cmd in ('select', 'previous', 'next', 'list',
+                   'up', 'down', 'left', 'right'):
             _show_list(c.list(), c.item())
 
 
