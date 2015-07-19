@@ -23,6 +23,7 @@ class RemoteController(object):
     _host_path = '/YamahaRemoteControl/ctrl'
     _paths = {
         'Power': 'System/Power_Control/Power',
+        'Volume': 'Main_Zone/Volume/Lvl'
     }
 
     def __init__(self, host):
@@ -44,6 +45,17 @@ class RemoteController(object):
     def _put(self, path, text=None):
         path = self._paths.get(path, path)
         return self._post(self._put_xml(path, text))
+
+
+"""Responses.
+
+<YAMAHA_AV rsp="GET" RC="0"><System><Power_Control><Power>On</Power></Power_Control></System></YAMAHA_AV>
+
+<YAMAHA_AV rsp="GET" RC="0"><Main_Zone><Volume><Lvl><Val>46</Val><Exp>0</Exp><Unit></Unit></Lvl></Volume></Main_Zone></YAMAHA_AV>
+
+
+
+"""
 
 
 if __name__ == '__main__':
