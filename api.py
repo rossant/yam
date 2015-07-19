@@ -30,8 +30,8 @@ def _get_item(mydict, path):
     return mydict
 
 
-def pause():
-    sleep(.25)
+def pause(dur=.5):
+    sleep(dur)
 
 
 class RemoteController(object):
@@ -110,6 +110,10 @@ class RemoteController(object):
     def current(self):
         return self.get('SERVER/Play_Info')
 
+    def is_playing(self):
+        info = self.current()
+        return info['Playback_Info'] == 'Play'
+
     def select(self, idx=0):
         self.put('SERVER/List_Control/Direct_Sel', 'Line_{}'.format(idx + 1))
 
@@ -128,26 +132,34 @@ class RemoteController(object):
     def page_down(self):
         self.page('down')
 
-    def _list(self):
-        items = self.get('SERVER/List_Info')
-        pause()
-        return items
-
     def list(self):
         k = 8
-        items = self._list()
-        max_line = int(_get_item(items, 'Cursor_Position/Max_Line'))
+        items = self.get('SERVER/List_Info')
+        pause()
+        items = [_get_item(items, 'Current_List/Line_{}/Txt'.format(i + 1))
+                 for i in range(k)]
+        return [item for item in items if item]
+
+    def iter_pages(self):
+        k = 8
+        max_line = int(_get_item(self.get('SERVER/List_Info'),
+                                 'Cursor_Position/Max_Line'))
         n_pages = math.ceil(max_line / float(k))
-        l = []
         for page in range(n_pages):
-            if page >= 1:
-                self.page_down()
-                pause()
-                items = self._list()
-            for i in range(k):
-                l.append(_get_item(items,
-                                   'Current_List/Line_{}/Txt'.format(i + 1)))
-        return [item for item in l if item]
+            yield self.list()
+            self.page_down()
+            pause()
+
+    def iter_items(self):
+        for items in self.iter_pages():
+            for i, item in enumerate(items):
+                yield i, item
+
+    def list_complete(self):
+        l = []
+        for items in self.iter_pages():
+            l.extend(items)
+        return l
 
     def home(self):
         self.cursor('Return to Home')
@@ -189,21 +201,39 @@ class RemoteController(object):
         self.playback('Skip Rev')
 
 
-if __name__ == '__main__':
+def _match(item, dir):
+    return dir.lower() in item.lower()
 
-    c = RemoteController('http://yamaha')
+
+def navigate_server(c, *dirs):
+    # Server home.
+    c.stop()
     c.server()
     c.home()
 
+    # Get to root.
     for _ in range(2):
         c.select()
         pause()
 
-    pprint(c.list())
+    for dir in dirs:
+        dir = dir.lower()
+        for i, item in c.iter_items():
+            if _match(item, dir):
+                print("Match for {}.".format(item))
+                c.select(i)
+                pause()
+                break
+
+    # Navigate deeper until something is playing.
+    for _ in range(10):
+        if c.is_playing():
+            return
+        c.select()
+        pause()
 
 
-    # 'Info': 'System/Service/Info',
-    # 'Input': 'Main_Zone/Input/Input_Sel',  # SERVER
-    # 'Config': 'System/Config',
-    # 'Basic': 'Main_Zone/Basic_Status',
-    # 'Input_Sel_Item': 'Main_Zone/Input/Input_Sel_Item',
+if __name__ == '__main__':
+
+    c = RemoteController('http://yamaha')
+    navigate_server(c, 'beethoven', 'heid', '17', '3.')
