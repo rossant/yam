@@ -34,6 +34,13 @@ def _get_item(mydict, path):
     return mydict
 
 
+def _on_off(c):
+    if isinstance(c, string_types):
+        return c.title()
+    else:
+        return 'On' if c else 'Off'
+
+
 def pause(dur=.5):
     sleep(dur)
 
@@ -78,7 +85,7 @@ class RemoteController(object):
             obj = _request(path, mode='put')
             child = _get_item(obj, path)
             child['Val'] = str(val)
-            child['Exp'] = '1'
+            child['Exp'] = 0
             child['Unit'] = 'dB'
             return self.post(obj)
 
@@ -90,7 +97,7 @@ class RemoteController(object):
     def mute(self, on=None):
         if on is None:
             return self.get('Main_Zone/Volume/Mute')
-        self.put('Main_Zone/Volume/Mute', 'On' if on else 'Off')
+        self.put('Main_Zone/Volume/Mute', _on_off(on))
 
     def info(self):
         return self.get('System/Service/Info')
@@ -112,6 +119,15 @@ class RemoteController(object):
     def server(self):
         if self.input() != 'server':
             self.input('server')
+
+    def tuner(self):
+        if self.input() != 'tuner':
+            self.input('tuner')
+
+    def preset(self, preset=None):
+        if preset is None:
+            return self.get('Tuner/Play_Control/Preset/Preset_Sel')
+        self.put('Tuner/Play_Control/Preset/Preset_Sel', preset)
 
     def optical(self):
         if self.input() != 'optical':
@@ -274,9 +290,13 @@ def main():
         c.power(cmd)
     elif hasattr(c, cmd):
         args = sys.argv[2:]
-        print("{} {}".format(cmd.title(), ' '.join(args)), end=' ')
+        args_s = ' '.join(args)
+        if args_s:
+            args_s = ' ' + args_s
+        print("{}{}".format(cmd.title(), args_s), end=' ')
         out = getattr(c, cmd)(*args)
         if out:
+            print('\n', end='')
             print(out, end='')
         print('\n', end='')
     elif cmd == 'stop':
