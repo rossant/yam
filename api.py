@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import sys
 import requests
 import xmltodict
 import math
@@ -249,8 +250,21 @@ def navigate_server(c, *dirs):
         c.wait_menu()
 
 
-if __name__ == '__main__':
-
+def main():
     c = RemoteController('http://yamaha')
-    navigate_server(c, 'beethoven', 'heid', '17', '3.')
-    # navigate_server(c, 'muse', '2012')
+
+    cmd = sys.args[1]
+    if cmd in ('on', 'off'):
+        print("Power {}.".format(cmd))
+        c.power(cmd)
+    elif hasattr(c, cmd):
+        print("{}.".format(cmd.title()))
+        getattr(c, cmd)()
+    elif cmd == 'stop':
+        c.stop()
+    else:
+        navigate_server(c, *sys.args[1:])
+
+
+if __name__ == '__main__':
+    main()
