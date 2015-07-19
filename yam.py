@@ -80,14 +80,19 @@ class RemoteController(object):
     def volume(self, val=None):
         path = 'Main_Zone/Volume/Lvl'
         if val is None:
-            return self.get(path, out_path=path + '/Val')
+            return int(self.get(path, out_path=path + '/Val'))
         else:
+            val = val.lower()
+            if val == 'up':
+                val = self.volume() + 5
+            elif val == 'down':
+                val = self.volume() - 5
             obj = _request(path, mode='put')
             child = _get_item(obj, path)
             child['Val'] = str(val)
             child['Exp'] = 0
-            child['Unit'] = 'dB'
-            return self.post(obj)
+            child['Unit'] = ''
+            self.post(obj)
 
     def power(self, on=None):
         if on is None:
@@ -127,7 +132,7 @@ class RemoteController(object):
     def preset(self, preset=None):
         if preset is None:
             return self.get('Tuner/Play_Control/Preset/Preset_Sel')
-        self.put('Tuner/Play_Control/Preset/Preset_Sel', preset)
+        self.put('Tuner/Play_Control/Preset/Preset_Sel', preset.title())
 
     def optical(self):
         if self.input() != 'optical':
@@ -295,6 +300,9 @@ def main():
             args_s = ' ' + args_s
         print("{}{}".format(cmd.title(), args_s), end=' ')
         out = getattr(c, cmd)(*args)
+        if isinstance(out, dict):
+            pprint(out)
+            return
         if out:
             print('\n', end='')
             print(out, end='')
