@@ -78,14 +78,18 @@ class RemoteController(object):
 
     def input(self, input=None):
         if input is None:
-            return self.get('Main_Zone/Input/Input_Sel')
-        self.put('Main_Zone/Input/Input_Sel', input)
+            return self.get('Main_Zone/Input/Input_Sel').lower()
+        self.put('Main_Zone/Input/Input_Sel', input.upper())
+
+    def server(self):
+        if c.input() != 'server':
+            c.input('server')
 
 
 if __name__ == '__main__':
 
     c = RemoteController('http://yamaha')
-    print(c.input())
+    c.input('optical')
 
     # req = _root('get')
 
