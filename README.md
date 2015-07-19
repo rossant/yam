@@ -2,6 +2,12 @@
 
 This Python module provides a `RemoteController` class and a CLI tool to control a Yamaha AV network system.
 
+## Dependencies
+
+* Python (only tested with Python 3)
+* six
+* xmltodict
+
 ## Installation
 
 ```bash
