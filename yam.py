@@ -63,15 +63,15 @@ class RemoteController(object):
         assert isinstance(obj, dict)
         xml = xmltodict.unparse(obj, pretty=True)
         out = self._post_xml(xml)
-        try:
+        if out:
             out = xmltodict.parse(out)
-        except TypeError:
+        if out and out_path:
+            return _get_item(out, out_path)
+        if not out:
             msg = "An error occurred with the following request:\n"
             msg += xml
             raise ValueError(msg)
             return
-        if out_path:
-            return _get_item(out, out_path)
         return out
 
     def get(self, obj, text=None, out_path=None):
@@ -148,9 +148,9 @@ class RemoteController(object):
     # -------------------------------------------------------------------------
 
     def current(self, input=''):
-        input = input.upper()
         if not input:
             input = self.input()
+        input = input.upper()
         if input == 'TUNER':
             input = 'Tuner'
         return self.get('{}/Play_Info'.format(input))
