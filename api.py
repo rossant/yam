@@ -11,12 +11,22 @@ def _build_xml(path, text=None, mode=None):
     root.set('cmd', mode)
     if isinstance(path, string_types):
         path = [path]
-    for p in path:
+    if isinstance(text, string_types):
+        text = [text]
+    nodes = {}
+    for p, t in zip(path, text):
         p = p.split('/')
         child = root
+        cur = []
         for child_name in p:
-            child = SubElement(child, child_name)
-        child.text = text
+            cur.append(child_name)
+            n = '/'.join(cur)
+            if n in nodes:
+                child = nodes[n]
+            else:
+                child = SubElement(child, child_name)
+                nodes[n] = child
+        child.text = t
     header = '<?xml version="1.0" encoding="utf-8"?>'
     contents = tostring(root, encoding='UTF-8')
     contents = contents.decode('unicode_escape')
@@ -90,9 +100,10 @@ class RemoteController(object):
 
 
 if __name__ == '__main__':
-    c = RemoteController('http://yamaha')
+
+    # c = RemoteController('http://yamaha')
     # c._put('Main_Zone/Volume/Lvl/Val', '50')
-    print(c._get('Main_Zone/Volume/Lvl'))
+    # print(c._get('Main_Zone/Volume/Lvl'))
 
     # for name in (
     #     'Basic',
