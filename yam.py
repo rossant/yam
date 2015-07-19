@@ -41,10 +41,6 @@ def _on_off(c):
         return 'On' if c else 'Off'
 
 
-def pause(dur):
-    sleep(dur)
-
-
 class RemoteController(object):
     _host_path = '/YamahaRemoteControl/ctrl'
 
@@ -231,7 +227,7 @@ class RemoteController(object):
         # Pause until the menu is ready.
         while True:
             if self.get('SERVER/List_Info')['Menu_Status'] != 'Ready':
-                pause(.05)
+                sleep(.05)
             else:
                 return
 
