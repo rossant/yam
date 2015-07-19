@@ -151,7 +151,7 @@ class RemoteController(object):
 
     def show(self):
         current = self.current('Tuner')
-        out = current['Meta_Info']['Program_Service'].strip() + ' - '
+        out = (current['Meta_Info']['Program_Service'] or '').strip() + ' - '
         out += (current['Meta_Info']['Radio_Text_A'] or ' ' +
                 current['Meta_Info']['Radio_Text_B'] or '').strip()
         return out
@@ -310,14 +310,12 @@ def main():
         args_s = ' '.join(args)
         if args_s:
             args_s = ' ' + args_s
-        print(args_s, end=' ')
         out = getattr(c, cmd)(*args)
         if isinstance(out, dict):
             pprint(out)
             return
         if out:
-            print(out.strip(), end='')
-        print('\n', end='')
+            print(str(out).strip())
     elif cmd == 'stop':
         c.stop()
     else:
