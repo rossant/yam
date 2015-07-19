@@ -63,7 +63,13 @@ class RemoteController(object):
         assert isinstance(obj, dict)
         xml = xmltodict.unparse(obj, pretty=True)
         out = self._post_xml(xml)
-        out = xmltodict.parse(out)
+        try:
+            out = xmltodict.parse(out)
+        except TypeError:
+            msg = "An error occurred with the following request:\n"
+            msg += xml
+            raise ValueError(msg)
+            return
         if out_path:
             return _get_item(out, out_path)
         return out
@@ -158,7 +164,8 @@ class RemoteController(object):
 
     def is_playing(self):
         info = self.current()
-        return info['Playback_Info'] == 'Play'
+        if info:
+            return info['Playback_Info'] == 'Play'
 
     def select(self, idx=0):
         self.put('SERVER/List_Control/Direct_Sel', 'Line_{}'.format(idx + 1))
