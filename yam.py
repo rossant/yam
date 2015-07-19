@@ -156,10 +156,19 @@ class RemoteController(object):
         return self.get('{}/Play_Info'.format(input))
 
     def show(self):
-        current = self.current('Tuner')
-        out = (current['Meta_Info']['Program_Service'] or '').strip() + ' - '
-        out += (current['Meta_Info']['Radio_Text_A'] or ' ' +
-                current['Meta_Info']['Radio_Text_B'] or '').strip()
+        input = self.input().lower()
+        current = self.current(input)['Meta_Info']
+        out = ''
+        if input == 'tuner':
+            out += '{} - {}'.format(current.get('Program_Service', ''),
+                                    (current.get('Radio_Text_A', '') or '') +
+                                    (current.get('Radio_Text_B', '') or ''),
+                                    )
+        elif input == 'server':
+            out += '{} - {} - {}'.format(current['Artist'],
+                                         current['Album'],
+                                         current['Song'],
+                                         )
         return out
 
     def is_playing(self):
@@ -318,7 +327,7 @@ def main():
         if args_s:
             args_s = ' ' + args_s
         out = getattr(c, cmd)(*args)
-        if isinstance(out, dict):
+        if isinstance(out, (dict, list)):
             pprint(out)
             return
         if out:
