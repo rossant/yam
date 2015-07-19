@@ -182,14 +182,16 @@ class RemoteController(object):
         if info:
             return info['Playback_Info'] == 'Play'
 
-    def select(self, idx=0):
-        idx = int(idx) + 1
-        self.put('SERVER/List_Control/Direct_Sel', 'Line_{}'.format(idx))
+    def select(self, idx=1):
+        idx = int(idx)
+        self.put('SERVER/List_Control/Jump_Line', 'Line_{}'.format(idx))
 
-    def jump(self, idx=0):
-        self.put('SERVER/List_Control/Jump_Line', 'Line_{}'.format(idx + 1))
+    def jump(self, idx=1):
+        self.put('SERVER/List_Control/Jump_Line', 'Line_{}'.format(idx))
 
-    def cursor(self, cursor):
+    def cursor(self, cursor=None):
+        if cursor is None:
+            return self.get('SERVER/List_Control/Cursor')
         self.put('SERVER/List_Control/Cursor', cursor)
 
     def page(self, dir):
@@ -201,10 +203,14 @@ class RemoteController(object):
     def page_down(self):
         self.page('down')
 
+    def item(self):
+        return int(_get_item(self.get('SERVER/List_Info'),
+                             'Cursor_Position/Current_Line'))
+
     def list(self):
         k = 8
         items = self.get('SERVER/List_Info')
-        items = [_get_item(items, 'Current_List/Line_{}/Txt'.format(i + 1))
+        items = [_get_item(items, 'Current_List/Line_{}/Txt'.format(i))
                  for i in range(k)]
         return [item for item in items if item]
 
@@ -281,6 +287,16 @@ def _match(item, dir):
     return dir.lower() in item.lower()
 
 
+def _show_list(list, current=None):
+    start_color = '\033[92m'
+    end_color = '\033[0m'
+    for i, item in enumerate(list):
+        line = '{}. {}'.format(i, item)
+        if i == current:
+            line = '{}{}{}'.format(start_color, line, end_color)
+        print(line)
+
+
 def navigate_server(c, *dirs):
     c.stop()
     c.wait_menu()
@@ -322,6 +338,10 @@ def main():
     _aliases = {
         'sel': 'select',
         'vol': 'volume',
+        'inp': 'input',
+        'u': 'page_up',
+        'd': 'page_down',
+        'l': 'list',
     }
 
     c = RemoteController('http://yamaha')
@@ -335,6 +355,17 @@ def main():
     if cmd in ('on', 'off'):
         print("Power {}.".format(cmd))
         c.power(cmd)
+    elif cmd == 'stop':
+        c.stop()
+    elif cmd == 'nav':
+        navigate_server(c, *sys.argv[2:])
+    elif cmd == 'list':
+        _show_list(c.list(), c.item())
+    elif cmd[0] in '+-':
+        if len(cmd) == 1:
+            cmd += '1'
+        c.volume(cmd)
+        print(c.volume())
     elif hasattr(c, cmd):
         args = sys.argv[2:]
         args_s = ' '.join(args)
@@ -342,21 +373,13 @@ def main():
             args_s = ' ' + args_s
         out = getattr(c, cmd)(*args)
         if isinstance(out, (dict, list)):
-            if isinstance(out, list):
-                out = ['{}. {}'.format(i, item) for i, item in enumerate(out)]
             pprint(out)
             return
         if out:
             print(str(out).strip())
-    elif cmd == 'stop':
-        c.stop()
-    elif cmd == 'nav':
-        navigate_server(c, *sys.argv[2:])
-    elif cmd[0] in '+-':
-        if len(cmd) == 1:
-            cmd += '1'
-        c.volume(cmd)
-        print(c.volume())
+        c.wait_menu()
+        if cmd in ('previous', 'next', 'list'):
+            _show_list(c.list(), c.item())
 
 
 if __name__ == '__main__':
