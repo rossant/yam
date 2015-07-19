@@ -1,6 +1,8 @@
 import requests
 import xmltodict
-# from time import sleep
+import math
+from pprint import pprint
+from time import sleep
 from six import string_types
 
 
@@ -17,15 +19,19 @@ def _request(path, text=None, mode='get'):
         node[el] = {}
         node = node[el]
     if text:
-        node['#text'] = text
+        node['#text'] = str(text)
     return req
 
 
 def _get_item(mydict, path):
-    mydict = mydict['YAMAHA_AV']
+    mydict = mydict.get('YAMAHA_AV', mydict)
     for node in path.split('/'):
         mydict = mydict[node]
     return mydict
+
+
+def pause():
+    sleep(.25)
 
 
 class RemoteController(object):
@@ -85,36 +91,104 @@ class RemoteController(object):
         if c.input() != 'server':
             c.input('server')
 
+    def optical(self):
+        if c.input() != 'optical':
+            c.input('optical')
+
+    def current(self):
+        return self.get('SERVER/Play_Info')
+
+    def select(self, idx=0):
+        self.put('SERVER/List_Control/Direct_Sel', 'Line_{}'.format(idx + 1))
+
+    def jump(self, idx=0):
+        self.put('SERVER/List_Control/Jump_Line', 'Line_{}'.format(idx + 1))
+
+    def cursor(self, cursor):
+        self.put('SERVER/List_Control/Cursor', cursor)
+
+    def page(self, dir):
+        self.put('SERVER/List_Control/Page', dir.title())
+
+    def page_up(self):
+        self.page('up')
+
+    def page_down(self):
+        self.page('down')
+
+    def _list(self):
+        items = self.get('SERVER/List_Info')
+        pause()
+        return items
+
+    def list(self):
+        k = 8
+        items = self._list()
+        max_line = int(_get_item(items, 'Cursor_Position/Max_Line'))
+        n_pages = math.ceil(max_line / float(k))
+        l = []
+        for page in range(n_pages):
+            if page >= 1:
+                self.page_down()
+                pause()
+                items = self._list()
+            for i in range(k):
+                l.append(_get_item(items,
+                                   'Current_List/Line_{}/Txt'.format(i + 1)))
+        return [item for item in l if item]
+
+    def home(self):
+        self.cursor('Return to Home')
+
+    def back(self):
+        self.cursor('Return')
+
+    def up(self):
+        self.cursor('Up')
+
+    def down(self):
+        self.cursor('Down')
+
+    def left(self):
+        self.cursor('Left')
+
+    def right(self):
+        self.cursor('Right')
+
+    def playback(self, cmd):
+        self.put('SERVER/Play_Control/Playback', cmd)
+
+    def play(self):
+        self.playback('Play')
+
+    def stop(self):
+        self.playback('Stop')
+
+    def pause(self):
+        self.playback('Pause')
+
+    def next(self):
+        self.playback('Skip Fwd')
+
+    def previous(self):
+        self.playback('Skip Rev')
+
 
 if __name__ == '__main__':
 
     c = RemoteController('http://yamaha')
-    c.input('optical')
+    c.server()
+    c.home()
 
-    # req = _root('get')
+    for _ in range(2):
+        c.select()
+        pause()
 
-    # if c.get('Input') != 'SERVER':
-        # c.put('Input', 'SERVER')
-
-    # c.put('Cursor', 'Return to Home')
-    # c.put('Select', 'Line_1')
-    # c.put('Select', 'Line_1')
-    # c.put('Select', 'Line_1')
-    # print(c.get('List_Info'))
+    pprint(c.list())
 
 
     # 'Info': 'System/Service/Info',
     # 'Input': 'Main_Zone/Input/Input_Sel',  # SERVER
-
     # 'Config': 'System/Config',
-    # 'List_Info': 'SERVER/List_Info',
-    # 'Play_Info': 'SERVER/Play_Info',
-    # 'Select': 'SERVER/List_Control/Direct_Sel',
-    # 'Cursor': 'SERVER/List_Control/Cursor',
-
-    # # 'Play/Pause/Stop/Skip Fwd/Skip Rev'
-    # 'Playback': 'SERVER/Play_Control/Playback',
-
     # 'Basic': 'Main_Zone/Basic_Status',
     # 'Input_Sel_Item': 'Main_Zone/Input/Input_Sel_Item',
-    # 'SERVER/List_Control/Jump_Line' 1
