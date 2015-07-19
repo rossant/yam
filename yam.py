@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from __future__ import print_function
+
 import sys
 import requests
 import xmltodict
@@ -271,8 +273,12 @@ def main():
         print("Power {}.".format(cmd))
         c.power(cmd)
     elif hasattr(c, cmd):
-        print("{}.".format(cmd.title()))
-        getattr(c, cmd)(*sys.argv[2:])
+        args = sys.argv[2:]
+        print("{} {}".format(cmd.title(), ' '.join(args)), end=' ')
+        out = getattr(c, cmd)(*args)
+        if out:
+            print(out, end='')
+        print('\n', end='')
     elif cmd == 'stop':
         c.stop()
     else:
