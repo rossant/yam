@@ -28,4 +28,4 @@ yam nav myartist myalbum mysingle
 ## Notes
 
 * This script is customized to my home audio installation -- you'll have to edit the module to make it work on your own installation.
-* No documentation.
+* There is no documentation.
