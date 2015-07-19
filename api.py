@@ -99,12 +99,12 @@ class RemoteController(object):
         self.put('Main_Zone/Input/Input_Sel', input.upper())
 
     def server(self):
-        if c.input() != 'server':
-            c.input('server')
+        if self.input() != 'server':
+            self.input('server')
 
     def optical(self):
-        if c.input() != 'optical':
-            c.input('optical')
+        if self.input() != 'optical':
+            self.input('optical')
 
     # Navigation
     # -------------------------------------------------------------------------
@@ -253,7 +253,7 @@ def navigate_server(c, *dirs):
 def main():
     c = RemoteController('http://yamaha')
 
-    cmd = sys.args[1]
+    cmd = sys.argv[1]
     if cmd in ('on', 'off'):
         print("Power {}.".format(cmd))
         c.power(cmd)
@@ -263,7 +263,7 @@ def main():
     elif cmd == 'stop':
         c.stop()
     else:
-        navigate_server(c, *sys.args[1:])
+        navigate_server(c, *sys.argv[1:])
 
 
 if __name__ == '__main__':
