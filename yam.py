@@ -90,6 +90,15 @@ class RemoteController(object):
             return self.get('Main_Zone/Volume/Mute')
         self.put('Main_Zone/Volume/Mute', 'On' if on else 'Off')
 
+    def info(self):
+        return self.get('System/Service/Info')
+
+    def config(self):
+        return self.get('System/Config')
+
+    def status(self):
+        return self.get('Main_Zone/Basic_Status')
+
     # Input
     # -------------------------------------------------------------------------
 
@@ -252,6 +261,10 @@ def navigate_server(c, *dirs):
 
 def main():
     c = RemoteController('http://yamaha')
+
+    if len(sys.argv) == 1:
+        print('Yamaha ' + c.config()['Model_Name'])
+        return
 
     cmd = sys.argv[1]
     if cmd in ('on', 'off'):
