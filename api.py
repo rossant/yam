@@ -1,6 +1,7 @@
 import requests
 from xml.etree.ElementTree import Element, SubElement, tostring
 from xml.etree import ElementTree as ET
+from six import string_types
 
 
 def _build_xml(path, text=None, mode=None):
@@ -8,11 +9,14 @@ def _build_xml(path, text=None, mode=None):
     assert mode in ('GET', 'PUT')
     root = Element('YAMAHA_AV')
     root.set('cmd', mode)
-    path = path.split('/')
-    child = root
-    for child_name in path:
-        child = SubElement(child, child_name)
-    child.text = text
+    if isinstance(path, string_types):
+        path = [path]
+    for p in path:
+        p = p.split('/')
+        child = root
+        for child_name in p:
+            child = SubElement(child, child_name)
+        child.text = text
     header = '<?xml version="1.0" encoding="utf-8"?>'
     contents = tostring(root, encoding='UTF-8')
     contents = contents.decode('unicode_escape')
@@ -22,8 +26,10 @@ def _build_xml(path, text=None, mode=None):
 def _get_path_xml(xml, path):
     node = ET.fromstring(xml)
     for child_name in path.split('/'):
+        if node is None:
+            return
         node = node.find(child_name)
-    return node.text
+    return node.text if node is not None else None
 
 
 class RemoteController(object):
@@ -41,6 +47,15 @@ class RemoteController(object):
         # 'Play_Info': 'SERVER/Play_Info',
         # 'Config': 'System/Config',
         # 'Info': 'System/Service/Info',
+
+        # 'Main_Zone/Input/Input_Sel' SERVER
+        # 'SERVER/List_Control/Direct_Sel' Line_1
+        # 'SERVER/List_Control/Jump_Line' 1
+        # 'SERVER/Play_Control/Playback' Pause
+        # 'SERVER/Play_Control/Playback' Play
+        # 'SERVER/Play_Control/Playback' Skip Fwd
+        # 'SERVER/Play_Control/Playback' Skip Rev
+        # 'SERVER/Play_Control/Playback' Stop
 
     }
 
@@ -61,9 +76,10 @@ class RemoteController(object):
         else:
             output_path = path
         xml = _build_xml(path, text, mode=mode)
-        out = self._post_xml(xml)
-        if output_path:
-            return _get_path_xml(out, output_path)
+        xml_out = self._post_xml(xml)
+        out = _get_path_xml(xml_out, output_path)
+        if not out:
+            return xml_out
         return out
 
     def _get(self, path, text=None):
@@ -73,19 +89,10 @@ class RemoteController(object):
         return self._request(path, text, mode='put')
 
 
-"""Responses.
-
-
-<YAMAHA_AV rsp="GET" RC="0"><System><Power_Control><Power>On</Power></Power_Control></System></YAMAHA_AV>
-
-<YAMAHA_AV rsp="GET" RC="0"><Main_Zone><Volume><Lvl><Val>46</Val><Exp>0</Exp><Unit></Unit></Lvl></Volume></Main_Zone></YAMAHA_AV>
-
-"""
-
-
 if __name__ == '__main__':
     c = RemoteController('http://yamaha')
-    print(c._get('Volume'))
+    # c._put('Main_Zone/Volume/Lvl/Val', '50')
+    print(c._get('Main_Zone/Volume/Lvl'))
 
     # for name in (
     #     'Basic',
