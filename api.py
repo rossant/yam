@@ -37,22 +37,27 @@ class RemoteController(object):
     def _post_xml(self, xml):
         return requests.post(self._host + self._host_path, xml).text
 
-    def post(self, obj, out_path=None, text=None, mode='get'):
+    def post(self, obj, text=None, out_path=None, mode='get'):
         if isinstance(obj, string_types):
             obj = _request(obj, text=text, mode=mode)
         assert isinstance(obj, dict)
         xml = xmltodict.unparse(obj, pretty=True)
-        print(xml)
         out = self._post_xml(xml)
         out = xmltodict.parse(out)
         if out_path:
             return _get_item(out, out_path)
         return out
 
+    def get(self, obj, text=None, out_path=None):
+        return self.post(obj, text=text, out_path=out_path or obj, mode='get')
+
+    def put(self, obj, text=None, out_path=None):
+        return self.post(obj, text=text, out_path=out_path, mode='put')
+
     def volume(self, val=None):
         path = 'Main_Zone/Volume/Lvl'
         if val is None:
-            return self.post(path, path + '/Val')
+            return self.get(path, out_path=path + '/Val')
         else:
             obj = _request(path, mode='put')
             child = _get_item(obj, path)
@@ -61,18 +66,26 @@ class RemoteController(object):
             child['Unit'] = 'dB'
             return self.post(obj)
 
-    def power(self, on=True):
-        self.post('System/Power_Control/Power', text='On' if on else 'Off',
-                  mode='put')
+    def power(self, on=None):
+        if on is None:
+            return self.get('System/Power_Control/Power')
+        self.put('System/Power_Control/Power', 'On' if on else 'Off')
 
-    def mute(self, on=True):
-        self.post('Main_Zone/Volume/Mute', text='On' if on else 'Off',
-                  mode='put')
+    def mute(self, on=None):
+        if on is None:
+            return self.get('Main_Zone/Volume/Mute')
+        self.put('Main_Zone/Volume/Mute', 'On' if on else 'Off')
+
+    def input(self, input=None):
+        if input is None:
+            return self.get('Main_Zone/Input/Input_Sel')
+        self.put('Main_Zone/Input/Input_Sel', input)
 
 
 if __name__ == '__main__':
 
     c = RemoteController('http://yamaha')
+    print(c.input())
 
     # req = _root('get')
 
