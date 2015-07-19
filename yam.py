@@ -238,7 +238,7 @@ class RemoteController(object):
     def iter_items(self):
         for items in self.iter_pages():
             for i, item in enumerate(items):
-                yield i, item
+                yield i + 1, item
 
     def list_complete(self):
         l = []
