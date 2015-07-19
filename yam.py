@@ -142,7 +142,10 @@ class RemoteController(object):
     # -------------------------------------------------------------------------
 
     def current(self):
-        return self.get('SERVER/Play_Info')
+        input = self.input().upper()
+        if input == 'TUNER':
+            input = 'Tuner'
+        return self.get('{}/Play_Info'.format(input))
 
     def is_playing(self):
         info = self.current()
@@ -304,7 +307,6 @@ def main():
             pprint(out)
             return
         if out:
-            print('\n', end='')
             print(out, end='')
         print('\n', end='')
     elif cmd == 'stop':
