@@ -4,7 +4,7 @@ This Python module provides a `RemoteController` class and a CLI tool to control
 
 ## Dependencies
 
-* Python (only tested with Python 3)
+* Python 2 or Python 3
 * six
 * xmltodict
 
