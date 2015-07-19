@@ -41,7 +41,7 @@ def _on_off(c):
         return 'On' if c else 'Off'
 
 
-def pause(dur=.5):
+def pause(dur):
     sleep(dur)
 
 
@@ -275,10 +275,10 @@ def _match(item, dir):
 
 
 def navigate_server(c, *dirs):
-    # Server home.
     c.stop()
     c.wait_menu()
 
+    # Server home.
     c.server()
     c.home()
     c.wait_menu()
@@ -328,14 +328,16 @@ def main():
             args_s = ' ' + args_s
         out = getattr(c, cmd)(*args)
         if isinstance(out, (dict, list)):
+            if isinstance(out, list):
+                out = ['{}. {}'.format(i, item) for i, item in enumerate(out)]
             pprint(out)
             return
         if out:
             print(str(out).strip())
     elif cmd == 'stop':
         c.stop()
-    else:
-        navigate_server(c, *sys.argv[1:])
+    elif cmd == 'nav':
+        navigate_server(c, *sys.argv[2:])
 
 
 if __name__ == '__main__':
