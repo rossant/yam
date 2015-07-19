@@ -136,7 +136,6 @@ class RemoteController(object):
     def list(self):
         k = 8
         items = self.get('SERVER/List_Info')
-        pause()
         items = [_get_item(items, 'Current_List/Line_{}/Txt'.format(i + 1))
                  for i in range(k)]
         return [item for item in items if item]
@@ -149,7 +148,15 @@ class RemoteController(object):
         for page in range(n_pages):
             yield self.list()
             self.page_down()
-            pause()
+            self.wait_menu()
+
+    def wait_menu(self):
+        # Pause until the menu is ready.
+        while True:
+            if self.get('SERVER/List_Info')['Menu_Status'] != 'Ready':
+                pause(.05)
+            else:
+                return
 
     def iter_items(self):
         for items in self.iter_pages():
@@ -209,14 +216,16 @@ def _match(item, dir):
 def navigate_server(c, *dirs):
     # Server home.
     c.stop()
-    pause()
+    c.wait_menu()
+
     c.server()
     c.home()
+    c.wait_menu()
 
     # Get to root.
     for _ in range(2):
         c.select()
-        pause()
+        c.wait_menu()
 
     for dir in dirs:
         dir = dir.lower()
@@ -225,7 +234,7 @@ def navigate_server(c, *dirs):
             if _match(item, dir):
                 print("Match for {}".format(item))
                 c.select(i)
-                pause()
+                c.wait_menu()
                 no_match = False
                 break
         if no_match:
@@ -237,11 +246,11 @@ def navigate_server(c, *dirs):
         if c.is_playing():
             return
         c.select()
-        pause()
+        c.wait_menu()
 
 
 if __name__ == '__main__':
 
     c = RemoteController('http://yamaha')
-    # navigate_server(c, 'beethoven', 'heid', '17', '3.')
-    navigate_server(c, 'muse', '2012')
+    navigate_server(c, 'beethoven', 'heid', '17', '3.')
+    # navigate_server(c, 'muse', '2012')
