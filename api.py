@@ -48,24 +48,21 @@ class RemoteController(object):
         'Power': 'System/Power_Control/Power',
         'Volume': ('Main_Zone/Volume/Lvl', 'Main_Zone/Volume/Lvl/Val'),
         'ModelName': ('System/Config', 'System/Config/Model_Name'),
+        'Info': 'System/Service/Info',
+        'Input': 'Main_Zone/Input/Input_Sel',  # SERVER
+
+        'Config': 'SERVER/Config',
+        'List_Info': 'SERVER/List_Info',
+        'Play_Info': 'SERVER/Play_Info',
+        'Select': 'SERVER/List_Control/Direct_Sel',
+        'Cursor': 'SERVER/List_Control/Cursor',
+
+        # 'Play/Pause/Stop/Skip Fwd/Skip Rev'
+        'Playback': 'SERVER/Play_Control/Playback',
 
         # 'Basic': 'Main_Zone/Basic_Status',
-        # 'Input_Sel': 'Main_Zone/Input/Input_Sel',
         # 'Input_Sel_Item': 'Main_Zone/Input/Input_Sel_Item',
-        # 'Config': 'SERVER/Config',
-        # 'List_Info': 'SERVER/List_Info',
-        # 'Play_Info': 'SERVER/Play_Info',
-        # 'Config': 'System/Config',
-        # 'Info': 'System/Service/Info',
-
-        # 'Main_Zone/Input/Input_Sel' SERVER
-        # 'SERVER/List_Control/Direct_Sel' Line_1
         # 'SERVER/List_Control/Jump_Line' 1
-        # 'SERVER/Play_Control/Playback' Pause
-        # 'SERVER/Play_Control/Playback' Play
-        # 'SERVER/Play_Control/Playback' Skip Fwd
-        # 'SERVER/Play_Control/Playback' Skip Rev
-        # 'SERVER/Play_Control/Playback' Stop
 
     }
 
@@ -88,34 +85,28 @@ class RemoteController(object):
         xml = _build_xml(path, text, mode=mode)
         xml_out = self._post_xml(xml)
         out = _get_path_xml(xml_out, output_path)
+        import time
+        time.sleep(.1)
         if not out:
             return xml_out
         return out
 
-    def _get(self, path, text=None):
+    def get(self, path, text=None):
         return self._request(path, text, mode='get')
 
-    def _put(self, path, text=None):
+    def put(self, path, text=None):
         return self._request(path, text, mode='put')
 
 
 if __name__ == '__main__':
 
-    # c = RemoteController('http://yamaha')
-    # c._put('Main_Zone/Volume/Lvl/Val', '50')
-    # print(c._get('Main_Zone/Volume/Lvl'))
-
-    # for name in (
-    #     'Basic',
-    #     'Input_Sel',
-    #     'Input_Sel_Item',
-    #     'Config',
-    #     'List_Info',
-    #     'Play_Info',
-    #     'Config',
-    #     'Info',
-    # ):
-
-    #     print(name)
-    #     print(c._get(name))
-    #     print()
+    c = RemoteController('http://yamaha')
+    if c.get('Input') != 'SERVER':
+        c.put('Input', 'SERVER')
+    # print(c.put('Select', 'Line_1'))
+    c.put('Cursor', 'Return to Home')
+    c.put('Select', 'Line_1')
+    c.put('Select', 'Line_1')
+    c.put('Select', 'Line_1')
+    print(c.get('List_Info'))
+    # print(c.get('List_Info'))
