@@ -40,6 +40,9 @@ class RemoteController(object):
     def __init__(self, host):
         self._host = host
 
+    # Internal methods
+    # -------------------------------------------------------------------------
+
     def _post_xml(self, xml):
         return requests.post(self._host + self._host_path, xml).text
 
@@ -59,6 +62,9 @@ class RemoteController(object):
 
     def put(self, obj, text=None, out_path=None):
         return self.post(obj, text=text, out_path=out_path, mode='put')
+
+    # General
+    # -------------------------------------------------------------------------
 
     def volume(self, val=None):
         path = 'Main_Zone/Volume/Lvl'
@@ -82,6 +88,9 @@ class RemoteController(object):
             return self.get('Main_Zone/Volume/Mute')
         self.put('Main_Zone/Volume/Mute', 'On' if on else 'Off')
 
+    # Input
+    # -------------------------------------------------------------------------
+
     def input(self, input=None):
         if input is None:
             return self.get('Main_Zone/Input/Input_Sel').lower()
@@ -94,6 +103,9 @@ class RemoteController(object):
     def optical(self):
         if c.input() != 'optical':
             c.input('optical')
+
+    # Navigation
+    # -------------------------------------------------------------------------
 
     def current(self):
         return self.get('SERVER/Play_Info')
@@ -154,6 +166,9 @@ class RemoteController(object):
 
     def right(self):
         self.cursor('Right')
+
+    # Playback
+    # -------------------------------------------------------------------------
 
     def playback(self, cmd):
         self.put('SERVER/Play_Control/Playback', cmd)
