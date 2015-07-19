@@ -141,11 +141,20 @@ class RemoteController(object):
     # Navigation
     # -------------------------------------------------------------------------
 
-    def current(self):
-        input = self.input().upper()
+    def current(self, input=''):
+        input = input.upper()
+        if not input:
+            input = self.input()
         if input == 'TUNER':
             input = 'Tuner'
         return self.get('{}/Play_Info'.format(input))
+
+    def show(self):
+        current = self.current('Tuner')
+        out = current['Meta_Info']['Program_Service'].strip() + ' - '
+        out += (current['Meta_Info']['Radio_Text_A'] or ' ' +
+                current['Meta_Info']['Radio_Text_B'] or '').strip()
+        return out
 
     def is_playing(self):
         info = self.current()
@@ -301,13 +310,13 @@ def main():
         args_s = ' '.join(args)
         if args_s:
             args_s = ' ' + args_s
-        print("{}{}".format(cmd.title(), args_s), end=' ')
+        print(args_s, end=' ')
         out = getattr(c, cmd)(*args)
         if isinstance(out, dict):
             pprint(out)
             return
         if out:
-            print(out, end='')
+            print(out.strip(), end='')
         print('\n', end='')
     elif cmd == 'stop':
         c.stop()
