@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import requests
 import xmltodict
 import math
@@ -208,6 +209,7 @@ def _match(item, dir):
 def navigate_server(c, *dirs):
     # Server home.
     c.stop()
+    pause()
     c.server()
     c.home()
 
@@ -218,12 +220,17 @@ def navigate_server(c, *dirs):
 
     for dir in dirs:
         dir = dir.lower()
+        no_match = True
         for i, item in c.iter_items():
             if _match(item, dir):
-                print("Match for {}.".format(item))
+                print("Match for {}".format(item))
                 c.select(i)
                 pause()
+                no_match = False
                 break
+        if no_match:
+            print("No match.")
+            return
 
     # Navigate deeper until something is playing.
     for _ in range(10):
@@ -236,4 +243,5 @@ def navigate_server(c, *dirs):
 if __name__ == '__main__':
 
     c = RemoteController('http://yamaha')
-    navigate_server(c, 'beethoven', 'heid', '17', '3.')
+    # navigate_server(c, 'beethoven', 'heid', '17', '3.')
+    navigate_server(c, 'muse', '2012')
