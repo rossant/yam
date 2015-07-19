@@ -259,7 +259,7 @@ def main():
         c.power(cmd)
     elif hasattr(c, cmd):
         print("{}.".format(cmd.title()))
-        getattr(c, cmd)()
+        getattr(c, cmd)(*sys.argv[2:])
     elif cmd == 'stop':
         c.stop()
     else:
