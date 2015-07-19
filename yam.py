@@ -96,7 +96,7 @@ class RemoteController(object):
             if isinstance(val, string_types):
                 if val[0] in '+-':
                     val = self.volume() + int(val)
-                elif val.isinteger():
+                elif val.isdigit():
                     val = int(val)
             obj = _request(path, mode='put')
             child = _get_item(obj, path)
@@ -342,18 +342,25 @@ def main():
         'sel': 'select',
         'vol': 'volume',
         'inp': 'input',
-        'u': 'page_up',
-        'd': 'page_down',
+        'u': 'up',
+        'd': 'down',
+        'b': 'back',
+        'pu': 'page_up',
+        'pd': 'page_down',
         'l': 'list',
     }
 
     c = RemoteController('http://yamaha')
 
-    if len(sys.argv) == 1:
+    args = list(sys.argv)
+    if len(args) == 1:
         print('Yamaha ' + c.config()['Model_Name'])
         return
 
-    cmd = sys.argv[1]
+    if args[1].isdigit():
+        args = ['yam', 'sel', args[1]]
+
+    cmd = args[1]
     cmd = _aliases.get(cmd, cmd)
     if cmd in ('on', 'off'):
         print("Power {}.".format(cmd))
@@ -361,16 +368,24 @@ def main():
     elif cmd == 'stop':
         c.stop()
     elif cmd == 'nav':
-        navigate_server(c, *sys.argv[2:])
+        navigate_server(c, *args[2:])
     elif cmd == 'list':
         _show_list(c.list(), c.item())
     elif cmd[0] in '+-':
+        if cmd == '++':
+            cmd = '+2'
+        if cmd == '+++':
+            cmd = '+5'
+        if cmd == '--':
+            cmd = '-2'
+        if cmd == '---':
+            cmd = '-5'
         if len(cmd) == 1:
             cmd += '1'
         c.volume(cmd)
         print(c.volume())
     elif hasattr(c, cmd):
-        args = sys.argv[2:]
+        args = args[2:]
         args_s = ' '.join(args)
         if args_s:
             args_s = ' ' + args_s
@@ -382,7 +397,8 @@ def main():
             print(str(out).strip())
         c.wait_menu()
         if cmd in ('select', 'previous', 'next', 'list',
-                   'up', 'down', 'left', 'right'):
+                   'up', 'down', 'left', 'right', 'home', 'back',
+                   'page_up', 'page_down'):
             _show_list(c.list(), c.item())
 
 
