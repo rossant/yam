@@ -90,9 +90,14 @@ class RemoteController(object):
         else:
             val = val.lower()
             if val == 'up':
-                val = self.volume() + 2
+                val = '+1'
             elif val == 'down':
-                val = self.volume() - 2
+                val = '-1'
+            if isinstance(val, string_types):
+                if val[0] in '+-':
+                    val = self.volume() + int(val)
+                elif val.isinteger():
+                    val = int(val)
             obj = _request(path, mode='put')
             child = _get_item(obj, path)
             child['Val'] = str(val)
@@ -178,7 +183,8 @@ class RemoteController(object):
             return info['Playback_Info'] == 'Play'
 
     def select(self, idx=0):
-        self.put('SERVER/List_Control/Direct_Sel', 'Line_{}'.format(idx + 1))
+        idx = int(idx) + 1
+        self.put('SERVER/List_Control/Direct_Sel', 'Line_{}'.format(idx))
 
     def jump(self, idx=0):
         self.put('SERVER/List_Control/Jump_Line', 'Line_{}'.format(idx + 1))
@@ -312,6 +318,12 @@ def navigate_server(c, *dirs):
 
 
 def main():
+
+    _aliases = {
+        'sel': 'select',
+        'vol': 'volume',
+    }
+
     c = RemoteController('http://yamaha')
 
     if len(sys.argv) == 1:
@@ -319,6 +331,7 @@ def main():
         return
 
     cmd = sys.argv[1]
+    cmd = _aliases.get(cmd, cmd)
     if cmd in ('on', 'off'):
         print("Power {}.".format(cmd))
         c.power(cmd)
@@ -339,11 +352,10 @@ def main():
         c.stop()
     elif cmd == 'nav':
         navigate_server(c, *sys.argv[2:])
-    elif cmd == '+':
-        c.volume('up')
-        print(c.volume())
-    elif cmd == '-':
-        c.volume('down')
+    elif cmd[0] in '+-':
+        if len(cmd) == 1:
+            cmd += '1'
+        c.volume(cmd)
         print(c.volume())
 
 
