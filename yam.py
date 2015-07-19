@@ -90,15 +90,16 @@ class RemoteController(object):
         else:
             val = val.lower()
             if val == 'up':
-                val = self.volume() + 5
+                val = self.volume() + 2
             elif val == 'down':
-                val = self.volume() - 5
+                val = self.volume() - 2
             obj = _request(path, mode='put')
             child = _get_item(obj, path)
             child['Val'] = str(val)
             child['Exp'] = 0
             child['Unit'] = ''
             self.post(obj)
+            return val
 
     def power(self, on=None):
         if on is None:
@@ -338,6 +339,12 @@ def main():
         c.stop()
     elif cmd == 'nav':
         navigate_server(c, *sys.argv[2:])
+    elif cmd == '+':
+        c.volume('up')
+        print(c.volume())
+    elif cmd == '-':
+        c.volume('down')
+        print(c.volume())
 
 
 if __name__ == '__main__':
