@@ -306,7 +306,7 @@ def navigate_server(c, *dirs):
     c.wait_menu()
 
     # Get to root.
-    for _ in range(2):
+    for _ in range(1):
         c.select()
         c.wait_menu()
 
