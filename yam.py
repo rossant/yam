@@ -306,12 +306,12 @@ def navigate_server(c, *dirs):
     c.wait_menu()
 
     # Get to root.
-    c.select(2)
-    c.wait_menu()
     c.select(1)
     c.wait_menu()
-    c.select(2)
-    c.wait_menu()
+    # c.select(1)
+    # c.wait_menu()
+    # c.select(2)
+    # c.wait_menu()
 
     for dir in dirs:
         dir = dir.lower()
